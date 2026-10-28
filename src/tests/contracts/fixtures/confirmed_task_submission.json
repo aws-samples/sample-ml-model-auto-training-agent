@@ -1,0 +1,61 @@
+{
+  "frontend_config": {
+    "apiBaseUrl": "/poc",
+    "environmentLabel": "PoC",
+    "submittedBy": "demo-operator",
+    "signRegion": "cn-northwest-1",
+    "signHost": "example.execute-api.cn-northwest-1.amazonaws.com.cn",
+    "accessKeyId": "AKIAEXAMPLE",
+    "secretAccessKey": "secretexample"
+  },
+  "draft": {
+    "taskName": "时序预测（示例）-合同校验",
+    "taskType": "timeseries_forecast",
+    "dataLocation": "data/train.csv",
+    "outputLocation": "output/task-contract-1",
+    "modelName": "demo-model-01",
+    "targetEndpoint": "demo-endpoint-01",
+    "comment": "Forecast the target metric for the next 7 days",
+    "imageTag": "candidate",
+    "deploymentMode": "auto",
+    "isRecurring": false,
+    "scheduleStart": "",
+    "intervalValue": "1",
+    "intervalUnit": "days"
+  },
+  "payload": {
+    "task_name": "时序预测（示例）-合同校验",
+    "task_type": "timeseries_forecast",
+    "comment": "Forecast the target metric for the next 7 days",
+    "data_location": "data/train.csv",
+    "output_location": "output/task-contract-1",
+    "model_name": "demo-model-01",
+    "target_endpoint": "demo-endpoint-01",
+    "submitted_by": "demo-operator",
+    "image_tag": "candidate",
+    "deployment_mode": "auto",
+    "confirmation_flag": true
+  },
+  "required_fields": [
+    "task_type",
+    "data_location",
+    "output_location",
+    "model_name",
+    "target_endpoint",
+    "submitted_by"
+  ],
+  "success_response": {
+    "task_id": "task-contract-1",
+    "status": "SUBMITTED",
+    "message": "Task submitted successfully"
+  },
+  "backend_error": {
+    "status": 409,
+    "message": "Too many active tasks",
+    "error_code": "CONCURRENCY_LIMIT_EXCEEDED"
+  },
+  "validation_error": {
+    "status": 400,
+    "error_code": "VALIDATION_ERROR"
+  }
+}

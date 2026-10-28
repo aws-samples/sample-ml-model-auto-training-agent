@@ -1,0 +1,124 @@
+ml-model-auto-training-agent
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+This product is licensed under the MIT No Attribution License (MIT-0; see LICENSE). It includes and/or
+depends on third-party software listed below. Each such component remains under
+its own license; the licenses named here govern those components, not this
+project's own source.
+
+Licenses were read from the packaging metadata of the pinned versions. Verify
+them again after changing any pin, and consult each project's own LICENSE file
+for the authoritative text.
+
+================================================================================
+1. Python — infrastructure and control plane
+================================================================================
+
+  aws-cdk-lib                             Apache-2.0
+  constructs                              Apache-2.0
+  boto3                                   Apache-2.0
+  awscli                                  Apache-2.0
+
+================================================================================
+2. Python — training runtime (inside the container image)
+================================================================================
+
+  strands-agents, strands-agents-tools    Apache-2.0
+  autogluon (incl. .timeseries, .tabular) Apache-2.0
+  torch, torchvision                      Apache-2.0 AND Apache-2.0 WITH
+                                          LLVM-exception AND BSD-2-Clause AND
+                                          BSD-3-Clause AND BSL-1.0 AND MIT
+  transformers                            Apache-2.0
+  openai                                  Apache-2.0
+  pyarrow                                 Apache-2.0
+  xgboost                                 Apache-2.0
+  triton                                  MIT
+  pandas                                  BSD-3-Clause
+  numpy                                   BSD-3-Clause AND 0BSD AND MIT AND
+                                          Zlib AND CC0-1.0
+  scikit-learn                            BSD-3-Clause
+  joblib                                  BSD-3-Clause
+  httpx                                   BSD-3-Clause
+
+================================================================================
+3. Python — development and test only (NOT distributed)
+================================================================================
+
+  pytest                                  MIT
+  hypothesis                              MPL-2.0
+
+  hypothesis is Mozilla Public License 2.0, a file-level weak copyleft. It is a
+  test-only dependency declared in src/requirements-dev.txt and is not shipped in
+  any artifact, so it places no obligation on this project's MIT-0 distribution.
+  Re-evaluate if it is ever moved into a runtime requirements file.
+
+================================================================================
+4. NPM — web console
+================================================================================
+
+Direct dependencies:
+
+  react, react-dom                        MIT
+  vite, @vitejs/plugin-react              MIT
+  vitest, jsdom, fast-check               MIT
+  @testing-library/{react,jest-dom,user-event}   MIT
+  @types/react, @types/react-dom          MIT
+  typescript                              Apache-2.0
+
+Full resolved tree (180 packages), grouped by license:
+
+  MIT             160 packages
+  ISC               8 packages
+  Apache-2.0        5 packages  (aria-query, baseline-browser-mapping,
+                                 expect-type, typescript, xml-name-validator)
+  BSD-2-Clause      2 packages  (entities, webidl-conversions)
+  BSD-3-Clause      2 packages  (source-map-js, tough-cookie)
+  MIT-0             1 package   (@csstools/color-helpers)
+  CC-BY-4.0         1 package   (caniuse-lite)
+
+  caniuse-lite is a build-time browser-compatibility database consumed by the
+  toolchain. It is not emitted into the built dist/ bundle. Attribution is given
+  here in line with CC-BY-4.0.
+
+  No GPL, LGPL or AGPL component appears anywhere in the resolved tree.
+
+================================================================================
+5. Third-party content the build downloads but this project does NOT redistribute
+================================================================================
+
+The training container image is built by the consumer (see README). Building it
+pulls the following, which are NOT part of this repository and are NOT
+redistributed by this project. Review and accept their terms before you
+distribute any image you build.
+
+5.1 NVIDIA CUDA runtime wheels — PROPRIETARY
+
+  nvidia-cudnn-cu11, nvidia-cublas-cu11, nvidia-cuda-cupti-cu11,
+  nvidia-cuda-nvrtc-cu11, nvidia-cuda-runtime-cu11, nvidia-cufft-cu11,
+  nvidia-curand-cu11, nvidia-cusolver-cu11, nvidia-cusparse-cu11,
+  nvidia-nccl-cu11, nvidia-nvtx-cu11
+
+  These are published under NVIDIA proprietary terms
+  (SPDX: LicenseRef-NVIDIA-Proprietary; PyPI classifier: Other/Proprietary
+  License), not an OSI-approved open-source license. Installing them for your
+  own use is covered by the applicable NVIDIA license agreement, but
+  REDISTRIBUTING a built image that contains them — for example by pushing it to
+  a public registry — is a separate act governed by those terms, and the cuDNN
+  redistribution conditions in particular.
+
+  This is why no prebuilt image is published with this repository.
+
+5.2 Pretrained model weights
+
+  A time-series foundation model checkpoint is optionally baked into the image at
+  build time (see CHRONOS_MODEL_ID in src/training_runtime/Dockerfile). Model
+  weights carry their own license, which is independent of this project's MIT-0
+  license and of the library that loads them. Check the model card of whichever
+  checkpoint you configure before redistributing an image that contains it.
+
+5.3 Base image and package mirrors
+
+  The base image is public.ecr.aws/docker/library/python (PSF-licensed CPython in
+  a Debian userland, each component under its own license). Package mirrors are
+  configurable build arguments; the mirror you choose does not change the
+  licenses of the packages it serves.

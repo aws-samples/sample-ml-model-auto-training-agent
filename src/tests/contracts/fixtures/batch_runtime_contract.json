@@ -1,0 +1,33 @@
+{
+  "task_record": {
+    "task_id": "task-contract-1",
+    "resolved_image_tag": "candidate",
+    "data_location": "data/train.csv",
+    "comment": "just a note"
+  },
+  "submit_context": {
+    "bucket_name": "bucket-name",
+    "job_queue_arn": "queue-arn",
+    "job_definition_arn": "base-job-def-arn",
+    "image_repo_uri": "123456789012.dkr.ecr.cn/test",
+    "aws_region": "cn-north-1"
+  },
+  "expected_runtime_environment": {
+    "TASK_ID": "task-contract-1",
+    "BUCKET": "bucket-name",
+    "DATA_LOCATION": "data/train.csv",
+    "SKILLS_PREFIX": "skills/",
+    "LOGS_PREFIX": "logs/task-contract-1/",
+    "OUTPUT_PREFIX": "output/task-contract-1/",
+    "GROUND_TRUTH_KEY": "data/train.csv/data/ground_truth_hourly.csv",
+    "COMPARE_SCRIPT_KEY": "data/train.csv/eval/compare_timeseries.py",
+    "TRAINING_PROMPT": "Run the training per the provided skills.",
+    "ENFORCE_VERIFICATION": "1",
+    "AWS_REGION": "cn-north-1"
+  },
+  "expected_job_definition": {
+    "base_name": "training-base",
+    "resolved_arn": "arn:aws:batch:tagged",
+    "resolved_image": "123456789012.dkr.ecr.cn/test:candidate"
+  }
+}

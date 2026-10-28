@@ -1,0 +1,80 @@
+{
+  "app": "python app.py",
+  "context": {
+    "//seedAccounts": "登录账号配置, 默认为空: 不预置任何账号, 未配置时前端无法登录(失败即关闭, 避免所有部署共用一个公开已知的默认密码)。首次调用 /login 时按此列表播种到用户表(幂等, 已存在的账号不覆盖)。role 仅支持 admin / user。不要把真实密码提交进仓库, 部署时传入: cdk deploy -c 'seedAccounts=[{\"username\":\"admin\",\"password\":\"<强密码>\",\"role\":\"admin\"}]'",
+    "seedAccounts": [],
+    "//enableXray": "是否为所有 Lambda 与 API Gateway 阶段启用 AWS X-Ray 追踪。默认 true(安全基线)。设为 false 可关闭(如账号未开通 X-Ray 或需规避成本)。",
+    "enableXray": true,
+    "//s3Lifecycle": "S3 生命周期配置(天数)。不配置则用默认值;某项设为 0 表示禁用该规则。logsExpireDays: 训练日志 logs/ 过期(默认90); buildSourceExpireDays: 镜像构建源 agent-uploads/ 过期(默认30); accessLogsExpireDays: 访问日志桶过期(默认90); abortMultipartDays: 清理未完成分段上传(默认7)。",
+    "s3Lifecycle": {
+      "logsExpireDays": 90,
+      "buildSourceExpireDays": 30,
+      "accessLogsExpireDays": 90,
+      "abortMultipartDays": 7
+    },
+    "//dynamodbSecurity": "DynamoDB 安全可选项(默认全关)。pointInTimeRecovery: 全部 6 张表开启 PITR 连续备份; cloudtrailDataEvents: 创建 CloudTrail 记录本项目表的数据面事件(按事件量计费,日志写入访问日志桶 cloudtrail/ 前缀); configRules: 创建 AWS Config 托管规则(PITR/加密)持续监控表配置,要求区域内已有 Config recorder; createConfigRecorder: 若账号没有 recorder 则连同 recorder+delivery channel 一起创建(每区域仅允许一个,已有时勿开否则部署失败)。修改后需 cdk deploy 生效。",
+    "dynamodbSecurity": {
+      "pointInTimeRecovery": false,
+      "cloudtrailDataEvents": false,
+      "configRules": false,
+      "createConfigRecorder": false
+    },
+    "//ecrImmutableTags": "训练镜像 ECR 仓库是否启用不可变 tag(默认 false)。默认关闭: 控制台会原地重建滚动 tag stable。开启后已推送的 tag 无法覆盖, 每次构建须使用新 tag(如日期或版本号), 提交任务时显式选择; stable 只能构建一次。生产环境建议开启以保证可复现。修改后需 cdk deploy 生效。",
+    "ecrImmutableTags": false,
+    "//enableVpcFlowLogs": "是否开启 VPC Flow Logs(默认 false)。开启后记录整个 VPC 的全部流量(ACCEPT+REJECT),投递到访问日志桶 vpcflowlogs/ 前缀,保留期与自动删除由 s3Lifecycle.accessLogsExpireDays 生命周期规则控制。修改后需 cdk deploy 生效。",
+    "enableVpcFlowLogs": false,
+    "//apiLogRetentionDays": "API Gateway 访问日志/执行日志的 CloudWatch 保留天数(默认 90,到期自动删除)。CloudWatch 只支持特定档位(1/3/5/7/14/30/60/90/120/180/365/731/1827/3653),配置值会向上取最近档位。",
+    "apiLogRetentionDays": 90,
+    "//enableApiWaf": "是否给 API Gateway 挂 AWS WAF(默认 false,WebACL 有固定月费约 $5 + 每规则 $1 + 请求费)。开启后启用 AWS 托管规则组(CommonRuleSet、KnownBadInputs)和按源 IP 的速率限流。apiWafRateLimit: 单 IP 每 5 分钟请求上限(默认 2000)。",
+    "enableApiWaf": false,
+    "apiWafRateLimit": 2000,
+    "//lambdaLogLevel": "全部 Lambda 的最低日志级别(DEBUG/INFO/WARN/ERROR,默认 INFO)。生产环境建议设为 WARN,抑制 INFO 级结构化事件输出,仅保留 WARN/ERROR 诊断日志。修改后需 cdk deploy 生效。",
+    "lambdaLogLevel": "INFO",
+    "//enableAsyncFailureQueue": "是否为异步调用的 Lambda(oncomplete/image_oncomplete/deployment)配置 on-failure 失败目的地(默认 false)。开启后创建加密 SQS 队列(14 天保留),Lambda 异步重试(2 次)耗尽后完整事件进入队列,可告警和手动重驱,避免任务/镜像/部署状态因事件静默丢弃而卡住。队列 URL 见栈输出 AsyncFailureQueueUrl。修改后需 cdk deploy 生效。",
+    "enableAsyncFailureQueue": false,
+    "//vpc": "网络模式。不配置 vpcId 时(默认)由 CDK 自建 VPC(公有子网 + NAT 网关),需要 ec2:CreateInternetGateway / ec2:AllocateAddress 权限。若组织 SCP 禁止创建 IGW/EIP,则由客户手工创建 VPC 与私有子网后在此填入 vpcId + cidrBlock + privateSubnetIds + availabilityZones(后两者数量须一致),CDK 只做导入;此时工作负载运行在无公网路由的隔离子网,自动创建 Interface Endpoint(PrivateLink)访问 AWS API。privateSubnetRouteTableIds: 可选,数量须与 privateSubnetIds 相同(多个子网共用一张路由表时重复填同一 ID),填入后才创建 S3/DynamoDB Gateway Endpoint;若客户路由表已存在这两个网关端点,则不要填此项(否则部署报 'route table ... already has a route with destination-prefix-list-id pl-...'),已有端点继续生效。createInterfaceEndpoints: 可选,显式开关 Interface Endpoint(默认导入模式开启、自建模式关闭)。注意 Interface Endpoint 按个数×AZ×小时计费,合计成本高于 NAT 网关。",
+    "vpc": {},
+    "//llm": "训练 Agent 使用的 OpenAI 兼容 LLM 端点。字段: provider(openai 默认 / bedrock)、baseUrl、modelId。openai 模式需把 API Key 写入 Secrets Manager 密钥 auto-training-agent-provider-api-key; bedrock 模式用作业角色直接调用 Bedrock, modelId 填模型或推理配置文件 ID(如 us.anthropic.claude-sonnet-4-5-20250929-v1:0), 无需 baseUrl 和 API Key。不配置时用公网默认值(仅供快速试用)。导入 VPC(隔离子网)模式下无公网路由, 必须改为 VPC 内可达的地址, 否则 synth 阶段直接报错; 或改用 provider=bedrock 并加 bedrock-runtime VPC 端点。",
+    "llm": {},
+    "//taskTypes": "任务类型注册表——所有支持的任务类型在此统一定义(单一事实源)。每项字段:id(task_type 值,提交任务时用)、label(中文名,前端下拉展示)、skill(该类型对应的领域 skill md 文件名,需已烤入镜像)、enforceVerification(是否启用独立防作弊核验,默认 true;true 时 Runner 会下载真值+评估脚本独立算指标,需配 groundTruthFile/compareScript;false 时只要产出预测且模型非空即算成功,完全依赖 skill,无需真值文件)、groundTruthFile(真值文件名,位于数据包 <pkg>/data/ 下,仅 enforceVerification=true 时需要)、compareScript(评估脚本名,位于 <pkg>/eval/ 下,接口须与 compare_timeseries.py 一致,仅 enforceVerification=true 时需要)、requiredPredictionCount(可选,该类型必须产出多少个 prediction*.csv 才算成功,不配置时默认 1。搬运类任务(byo_deploy)不做推理、不产预测文件,必须配 0,否则每次 attempt 都会以 'Missing required artifacts: prediction csv' 失败)、instanceType(可选,该类型部署端点用的 SageMaker 实例;不配置时用 deployment Lambda 的 SAGEMAKER_INSTANCE_TYPE 默认值 ml.g5.4xlarge。经典 ML 模型(如 byo_deploy 搬运的 sklearn 模型)不需要 GPU,配 CPU 机型(如 ml.m5.xlarge)既省钱又避开 g5 端点配额,可与 GPU 端点并存)。新增类型只需在此加一项 + 准备对应 skill 文件(及可选评估包),无需改代码。不配置时后端回退到内置的 timeseries_forecast。首项的 skill 作为训练镜像的默认 DOMAIN_SKILL_NAME。",
+    "taskTypes": [
+      {
+        "id": "timeseries_forecast",
+        "label": "时序预测（示例）",
+        "skill": "timeseries-forecast-train.md",
+        "enforceVerification": true,
+        "groundTruthFile": "ground_truth_hourly.csv",
+        "compareScript": "compare_timeseries.py"
+      },
+      {
+        "id": "tabular_regression",
+        "label": "表格回归（示例）",
+        "skill": "tabular-regression-train.md",
+        "enforceVerification": false
+      },
+      {
+        "id": "byo_deploy",
+        "label": "已有模型直接部署",
+        "skill": "byo-model-deploy.md",
+        "enforceVerification": false,
+        "requiredPredictionCount": 0,
+        "instanceType": "ml.m5.xlarge"
+      }
+    ]
+  },
+  "watch": {
+    "include": [
+      "**"
+    ],
+    "exclude": [
+      "README.md",
+      "cdk*.json",
+      "requirements*.txt",
+      "source.bat",
+      "**/__pycache__",
+      "**/*.pyc",
+      ".venv",
+      "tests"
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "task_record": {
+    "task_id": "task-contract-1",
+    "status": "RUNNING",
+    "batch_job_id": "job-1",
+    "target_endpoint": "demo-endpoint-01",
+    "resolved_image_tag": "candidate",
+    "model_name": "demo-model-01",
+    "updated_at": "2026-01-01T00:00:00Z",
+    "error_message": "",
+    "deployment_skip_reason": ""
+  },
+  "manifest": {
+    "task_id": "task-contract-1",
+    "attempts": [
+      {
+        "attempt_number": 1,
+        "verification": {
+          "achieved": true,
+          "metric_name": "rmse",
+          "metric_value": 11.3,
+          "threshold": 12.5,
+          "threshold_direction": "lower_is_better",
+          "reason": "verified",
+          "missing_artifacts": [],
+          "source": "independent",
+          "report_path": "attempt-1/runner_verification.json"
+        }
+      }
+    ],
+    "terminal_outcome": {
+      "status": "SUCCEEDED",
+      "achieved": true,
+      "reason": "verified",
+      "final_metric_value": 11.3
+    },
+    "published_artifacts": [
+      {
+        "bucket": "bucket-name",
+        "key": "output/task-contract-1/model.tar.gz"
+      },
+      {
+        "bucket": "bucket-name",
+        "key": "output/task-contract-1/runner_verification.json"
+      }
+    ],
+    "output_prefix": "output/task-contract-1/"
+  },
+  "verification_report": {
+    "source": "independent",
+    "achieved": true,
+    "verified_metric": 11.3,
+    "threshold": 12.5,
+    "direction": "lower_is_better"
+  },
+  "expected_manifest_reference": {
+    "bucket": "bucket-name",
+    "key": "output/task-contract-1/runtime_manifest.json"
+  },
+  "expected_model_projection": {
+    "model_record_id": "task-contract-1",
+    "task_id": "task-contract-1",
+    "model_name": "demo-model-01",
+    "target_endpoint": "demo-endpoint-01",
+    "resolved_image_tag": "candidate",
+    "status": "DEPLOYING",
+    "provider_status": "ACCEPTED",
+    "artifact_reference_key": "output/task-contract-1/model.tar.gz",
+    "verification_source": "independent"
+  }
+}
