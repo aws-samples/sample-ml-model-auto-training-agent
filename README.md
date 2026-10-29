@@ -72,7 +72,7 @@ src/
 
 ## Deployment
 
-Prerequisites: Node.js ≥ 20, Python 3.12+, an AWS account bootstrapped for CDK (`npx cdk bootstrap`).
+Prerequisites: Node.js 20.19+ or 22.12+ (required by Vite 8), Python 3.12+, an AWS account bootstrapped for CDK (`npx cdk bootstrap`).
 
 ```bash
 # 1. Install dependencies

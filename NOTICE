@@ -65,20 +65,21 @@ Direct dependencies:
   @types/react, @types/react-dom          MIT
   typescript                              Apache-2.0
 
-Full resolved tree (180 packages), grouped by license:
+Full resolved tree (156 packages), grouped by license:
 
-  MIT             160 packages
-  ISC               8 packages
-  Apache-2.0        5 packages  (aria-query, baseline-browser-mapping,
-                                 expect-type, typescript, xml-name-validator)
+  MIT             131 packages
+  MPL-2.0          12 packages  (lightningcss and its per-platform binaries)
+  Apache-2.0        5 packages  (aria-query, detect-libc, expect-type,
+                                 typescript, xml-name-validator)
+  ISC               3 packages
   BSD-2-Clause      2 packages  (entities, webidl-conversions)
   BSD-3-Clause      2 packages  (source-map-js, tough-cookie)
   MIT-0             1 package   (@csstools/color-helpers)
-  CC-BY-4.0         1 package   (caniuse-lite)
 
-  caniuse-lite is a build-time browser-compatibility database consumed by the
-  toolchain. It is not emitted into the built dist/ bundle. Attribution is given
-  here in line with CC-BY-4.0.
+  lightningcss is Mozilla Public License 2.0, a file-level weak copyleft. It is
+  a build-time CSS transformer used by Vite; none of its code is emitted into
+  the built dist/ bundle, so it places no obligation on this project's MIT-0
+  distribution.
 
   No GPL, LGPL or AGPL component appears anywhere in the resolved tree.
 
