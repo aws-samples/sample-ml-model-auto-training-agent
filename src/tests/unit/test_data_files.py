@@ -1,3 +1,5 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
 """Unit tests for the data-files download/delete helpers, focused on the
 validation guards that keep deletion inside user-writable input areas and reject
 path traversal."""

@@ -1,3 +1,5 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
 from training_runtime.contracts import ContractError, join_bucket_path, load_runtime_contract
 
 

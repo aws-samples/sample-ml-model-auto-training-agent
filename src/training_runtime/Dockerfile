@@ -1,3 +1,5 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
 # Multi-stage image:
 #  - "training": runs as root. AWS Batch training needs root for /opt/ml
 #    scratch paths, agent shell tools and workspace writes. Build it with
@@ -24,7 +26,9 @@ ARG PIP_INDEX_URL=https://pypi.org/simple/
 # Empty by default: --trusted-host makes pip skip TLS certificate verification
 # for that host, so it must never be on for the public index. Pass it as a build
 # arg only for a mirror that genuinely needs it (the China build does). pip
-# treats an empty PIP_TRUSTED_HOST as "no trusted hosts".
+# treats an empty PIP_TRUSTED_HOST as "no trusted hosts". Build-time only: an
+# ARG is visible to the RUN steps below but, unlike ENV, does not persist into
+# the image, so containers never run with TLS verification relaxed.
 ARG PIP_TRUSTED_HOST=
 
 # The CUDA 11.8 torch/torchvision + nvidia-*-cu11 wheels come from a dedicated
@@ -62,7 +66,6 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     WORKSPACE_ROOT=/work/runtime \
     PIP_INDEX_URL=${PIP_INDEX_URL} \
-    PIP_TRUSTED_HOST=${PIP_TRUSTED_HOST} \
     PIP_DEFAULT_TIMEOUT=300 \
     PIP_RETRIES=10 \
     HF_ENDPOINT=${HF_ENDPOINT} \

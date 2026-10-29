@@ -1,3 +1,5 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
 import { describe, expect, it, vi } from "vitest";
 
 import { ApiClient } from "../lib/api";

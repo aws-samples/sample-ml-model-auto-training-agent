@@ -1,3 +1,5 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
 from training_runtime.config import load_runtime_config
 from training_runtime.providers import resolve_provider_selection
 
