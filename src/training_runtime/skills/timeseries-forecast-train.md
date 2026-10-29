@@ -87,7 +87,8 @@ output:
 
 ```python
 predictor = TimeSeriesPredictor(
-    prediction_length=1, target="target", eval_metric="MAPE", freq="h", path="models/"
+    prediction_length=1, target="target", eval_metric="MAPE", freq="h",
+    path=f"{OUTPUT_DIR}/models",  # OUTPUT_DIR = runtime 在 prompt 中给出的绝对输出目录
 )
 predictor.fit(
     train_data,

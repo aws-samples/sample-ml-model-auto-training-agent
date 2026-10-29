@@ -81,6 +81,35 @@ def _empty_model_reason(output_dir: Path) -> str | None:
     return None
 
 
+# Mirrors the deployment Lambda's artifact resolution
+# (lambda/deployment/runtime_outputs.resolve_deployable_artifact): a run that
+# passes verification must also leave something the endpoint can be built from,
+# otherwise the task reports success and deployment is silently skipped. This
+# happened when the agent saved the AutoGluon predictor with a relative path
+# that resolved outside the published attempt directory.
+_DEPLOYABLE_SUFFIXES = (
+    ".tar.gz", ".tgz", ".zip", ".joblib", ".pkl", ".pickle",
+    ".onnx", ".pt", ".bin", ".model",
+)
+_NON_DEPLOYABLE_SUFFIXES = (".json", ".csv", ".jsonl", ".txt", ".log")
+
+
+def _has_deployable_model(output_dir: Path) -> bool:
+    if not output_dir.exists():
+        return False
+    for path in output_dir.rglob("*"):
+        if not path.is_file():
+            continue
+        name = path.name.lower()
+        if name == "inference.py":
+            return True
+        if "prediction" in name or "events" in name or name.endswith(_NON_DEPLOYABLE_SUFFIXES):
+            continue
+        if name.endswith(_DEPLOYABLE_SUFFIXES) or "model" in name:
+            return True
+    return False
+
+
 def _build_result(
     *,
     config: RuntimeConfig,
@@ -128,6 +157,8 @@ def _fallback_verify_attempt_output(
     prediction_files = _collect_prediction_files(output_dir) if output_dir.exists() else []
     if len(prediction_files) < config.required_prediction_count:
         missing.append("prediction csv")
+    if not _has_deployable_model(output_dir):
+        missing.append("trained model artifact (save it under the output directory)")
 
     # Even without independent verification, never accept a predictor that has
     # no fit models (it cannot serve predictions once deployed).
@@ -282,6 +313,8 @@ def verify_attempt_output(
     prediction_files = _collect_prediction_files(output_dir) if output_dir.exists() else []
     if len(prediction_files) < config.required_prediction_count:
         missing.append("prediction csv")
+    if not _has_deployable_model(output_dir):
+        missing.append("trained model artifact (save it under the output directory)")
     if contract is None:
         missing.append("runtime contract")
     if workspace is None:

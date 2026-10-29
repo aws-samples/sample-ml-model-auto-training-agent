@@ -100,13 +100,21 @@ class StrandsAttemptExecutor:
             callback_handler=None,
             conversation_manager=conversation_manager,
         )
-        result = _invoke_agent_with_context_recovery(
-            agent=agent,
-            prompt=prompt,
-            runtime_log=runtime_log,
-            contract=contract,
-            attempt_number=attempt_number,
-        )
+        # Run the agent from the attempt directory so any relative path its
+        # tools write (e.g. a skill's path="models/") lands inside the attempt
+        # output that gets verified and published, not in the task root.
+        previous_cwd = os.getcwd()
+        os.chdir(attempt_dir)
+        try:
+            result = _invoke_agent_with_context_recovery(
+                agent=agent,
+                prompt=prompt,
+                runtime_log=runtime_log,
+                contract=contract,
+                attempt_number=attempt_number,
+            )
+        finally:
+            os.chdir(previous_cwd)
         summary = _extract_text(result.message)
         metric_pattern = self._metric_pattern_cache.setdefault(
             config.target_metric_name,
@@ -316,6 +324,10 @@ def _build_attempt_prompt(
         "files to produce and their exact contents.\n"
         "4. Do not end your reply early with only a plan or a started-in-background "
         "message; the run is complete only when the prediction files are written.\n"
+        f"5. Save the trained model under {output_dir}/models using that absolute "
+        "path (for AutoGluon pass path=<that directory> to the predictor). A "
+        "model saved anywhere else is not published and cannot be deployed, and "
+        "the attempt fails verification.\n"
     )
     # NOTE: the task comment (formerly TRAINING_PROMPT) is intentionally NOT
     # injected here. The training agent's flow is driven solely by the two

@@ -13,6 +13,12 @@ from training_runtime.verification import verify_attempt_output
 from training_runtime.workspace import prepare_workspace
 
 
+
+def _write_model(directory):
+    """A persisted predictor, so the run has a deployable model artifact."""
+    (directory / "models").mkdir(parents=True, exist_ok=True)
+    (directory / "models" / "predictor.pkl").write_bytes(b"model")
+
 class FakeS3Client:
     def __init__(self, objects: dict[str, str]):
         self._objects = objects
@@ -91,6 +97,7 @@ def test_verify_attempt_output_marks_success_when_metric_meets_threshold(tmp_pat
         "timestamp,prediction\n2026-01-01T00:00:00Z,12.0\n",
         encoding="utf-8",
     )
+    _write_model(output_dir)
     s3 = FakeS3Client(
         {
             "verification/ground_truth_hourly.csv": (
@@ -137,6 +144,7 @@ def test_verify_rejects_predictor_with_no_fit_models(tmp_path):
         "timestamp,prediction\n2026-01-01T00:00:00Z,12.0\n",
         encoding="utf-8",
     )
+    _write_model(output_dir)
     # AutoGluon persisted an empty predictor (Chronos download failed).
     log_dir = output_dir / "models" / "logs"
     log_dir.mkdir(parents=True)
@@ -186,6 +194,7 @@ def test_manifest_contains_terminal_outcome_and_skill_sources(tmp_path):
         "timestamp,prediction\n2026-01-01T00:00:00Z,12.0\n",
         encoding="utf-8",
     )
+    _write_model(output_dir)
     verification = verify_attempt_output(
         output_dir=output_dir,
         config=config,
@@ -282,3 +291,43 @@ def test_fallback_verification_still_requires_predictions_by_default(tmp_path):
 
     assert not result.achieved
     assert "prediction csv" in result.missing_artifacts
+
+
+def test_verification_fails_when_no_model_artifact_was_saved(tmp_path):
+    """Predictions + a report but no saved model (the agent wrote the predictor
+    outside the published attempt directory): verification must fail with a
+    retryable reason instead of a success that deployment then skips."""
+    contract = _build_contract()
+    config = load_runtime_config({"WORKSPACE_ROOT": str(tmp_path / "workspace")})
+    workspace = prepare_workspace(str(tmp_path / "workspace"), contract)
+    output_dir = workspace.attempt_dir(1)
+    (output_dir / "prediction_device.csv").write_text(
+        "timestamp,prediction\n2026-01-01T00:00:00Z,12.0\n", encoding="utf-8"
+    )
+
+    result = verify_attempt_output(
+        output_dir=output_dir,
+        config=config,
+        contract=contract,
+        workspace=workspace,
+        s3_client=FakeS3Client({}),
+    )
+
+    assert not result.achieved
+    assert any("trained model artifact" in item for item in result.missing_artifacts)
+
+
+def test_fallback_verification_requires_a_model_artifact(tmp_path):
+    config = load_runtime_config({"ENFORCE_VERIFICATION": "0"})
+    output_dir = tmp_path / "attempt"
+    output_dir.mkdir()
+    (output_dir / "prediction.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+    (output_dir / "evaluation_report.json").write_text("{}", encoding="utf-8")
+
+    result = verify_attempt_output(output_dir=output_dir, config=config)
+
+    assert not result.achieved
+    assert any("trained model artifact" in item for item in result.missing_artifacts)
+
+    _write_model(output_dir)
+    assert verify_attempt_output(output_dir=output_dir, config=config).achieved

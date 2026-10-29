@@ -9,6 +9,12 @@ from training_runtime.runner import AttemptExecutionResult, run_training_runtime
 from training_runtime.workspace import prepare_workspace
 
 
+
+def _write_model(directory):
+    """A persisted predictor, so the run has a deployable model artifact."""
+    (directory / "models").mkdir(parents=True, exist_ok=True)
+    (directory / "models" / "predictor.pkl").write_bytes(b"model")
+
 class FakeS3Client:
     def __init__(self, objects: dict[str, str]):
         self._objects = objects
@@ -54,6 +60,7 @@ class FakeExecutor:
             "timestamp,prediction\n2026-01-01T00:00:00Z,12.0\n",
             encoding="utf-8",
         )
+        _write_model(attempt_dir)
         return AttemptExecutionResult(
             attempt_number=attempt_number,
             output_dir=attempt_dir,
